@@ -1,0 +1,8 @@
+[package]
+name = "minidemo"
+version = "0.1.0"
+authors = ["Filip Szczepański <jazz2rulez@gmail.com>"]
+
+[dependencies]
+minifb = "0.10.4"
+game_time = "0.2.0"
