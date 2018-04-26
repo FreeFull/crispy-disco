@@ -8,7 +8,7 @@ const RAW_TILES: &'static [u8; 2048] = include_bytes!("../data/tiles.raw");
 fn tile_pixel(x: usize, y: usize) -> bool {
     let xlow = x & 0x07;
     let xhigh = x >> 3;
-    ((RAW_TILES[xhigh + y * 16] << xlow) & 0x80) == 0
+    ((RAW_TILES[xhigh + y * 16] << xlow) & 0x80) != 0
 }
 
 pub fn gen_tileset() -> Tileset {
