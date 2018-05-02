@@ -1,9 +1,5 @@
-extern crate game_time;
 extern crate minifb;
 
-use game_time::framerate::RunningAverageSampler;
-use game_time::step::VariableStep;
-use game_time::{FrameCount, FrameCounter, GameClock};
 use minifb::{Key, Scale, Window, WindowOptions};
 
 mod tileset;
@@ -36,8 +32,6 @@ struct Demo {
     tilebuffer: [ColouredTile; WIDTH * HEIGHT],
     tiles: Tileset,
     is_running: bool,
-    clock: GameClock,
-    counter: FrameCounter<RunningAverageSampler>,
 }
 
 impl Demo {
@@ -51,30 +45,15 @@ impl Demo {
             }; FB_WIDTH / TILE_WIDTH * FB_HEIGHT / TILE_HEIGHT],
             tiles: gen_tileset(),
             is_running: true,
-            clock: GameClock::new(),
-            counter: FrameCounter::new(60.0, RunningAverageSampler::with_max_samples(60)),
         }
     }
 
     fn step(&mut self, window: &mut Window) {
-        let time = self.clock.tick(&VariableStep::new());
-        self.counter.tick(&time);
         self.draw();
-        self.tilebuffer = [ColouredTile {
-            tile_index: 16,
-            bg: 0x00FFFFFF,
-            fg: 0,
-        }; FB_WIDTH / TILE_WIDTH * FB_HEIGHT / TILE_HEIGHT];
-        for (i, tile) in self.tilebuffer.iter_mut().enumerate() {
-            let x = ((i % (FB_WIDTH / TILE_WIDTH)) * 8) as u8;
-            let y = ((i / (FB_WIDTH / TILE_WIDTH)) * 8) as u8;
-            tile.fg = rgb(x, y, x / 2 + y / 2);
-        }
         window.update_with_buffer(&self.framebuffer).unwrap();
         if window.is_key_down(Key::Q) || window.is_key_down(Key::Escape) {
             self.is_running = false;
         }
-        self.clock.sleep_remaining(&self.counter);
     }
 
     fn is_running(&self) -> bool {
@@ -106,8 +85,5 @@ fn main() {
     let mut demo = Demo::new();
     while window.is_open() && demo.is_running() {
         demo.step(&mut window);
-        if demo.clock.current_frame_number() % 60 == 1 {
-            println!("fps: {}", demo.counter.average_frame_rate());
-        }
     }
 }
