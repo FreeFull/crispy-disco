@@ -1,12 +1,17 @@
 extern crate minifb;
 extern crate ticktock;
+extern crate rand;
 
 use minifb::{Key, Scale, Window, WindowOptions};
 
 mod tileset;
 use tileset::*;
 
+mod effects;
+use effects::Sequencer;
+
 type Framebuffer = [u32; FB_WIDTH * FB_HEIGHT];
+type Tilebuffer = [ColouredTile; WIDTH * HEIGHT];
 
 const WIDTH: usize = 32;
 const HEIGHT: usize = 32;
@@ -22,7 +27,7 @@ fn rgb(r: u8, g: u8, b: u8) -> u32 {
 }
 
 #[derive(Copy, Clone, Debug)]
-struct ColouredTile {
+pub struct ColouredTile {
     tile_index: u8,
     fg: u32,
     bg: u32,
@@ -30,8 +35,9 @@ struct ColouredTile {
 
 struct Demo {
     framebuffer: Framebuffer,
-    tilebuffer: [ColouredTile; WIDTH * HEIGHT],
+    tilebuffer: Tilebuffer,
     tiles: Tileset,
+    sequencer: Sequencer,
     is_running: bool,
     clock: ticktock::Clock,
 }
@@ -41,23 +47,26 @@ impl Demo {
         Demo {
             framebuffer: [0; FB_WIDTH * FB_HEIGHT],
             tilebuffer: [ColouredTile {
-                tile_index: 0,
-                fg: 0x00FFFFFF,
-                bg: 0,
+                tile_index: 32,
+                fg: rgb(255,255,255),
+                bg: rgb(0,0,0),
             }; FB_WIDTH / TILE_WIDTH * FB_HEIGHT / TILE_HEIGHT],
             tiles: gen_tileset(),
+            sequencer: Sequencer::new(),
             is_running: true,
             clock: ticktock::Clock::framerate(60.0),
         }
     }
 
     fn step(&mut self, window: &mut Window) -> (u64, std::time::Instant) {
-        self.draw();
-        window.update_with_buffer(&self.framebuffer).unwrap();
         if window.is_key_down(Key::Q) || window.is_key_down(Key::Escape) {
             self.is_running = false;
         }
-        self.clock.wait_until_tick()
+        let (tick, start) = self.clock.wait_until_tick();
+        self.sequencer.step(&mut self.tilebuffer, tick);
+        self.draw();
+        window.update_with_buffer(&self.framebuffer).unwrap();
+        (tick, start)
     }
 
     fn is_running(&self) -> bool {
