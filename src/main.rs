@@ -10,6 +10,8 @@ use tileset::*;
 mod effects;
 use effects::Sequencer;
 
+mod util;
+
 type Framebuffer = [u32; FB_WIDTH * FB_HEIGHT];
 type Tilebuffer = [ColouredTile; WIDTH * HEIGHT];
 
@@ -28,7 +30,7 @@ fn rgb(r: u8, g: u8, b: u8) -> u32 {
 
 #[derive(Copy, Clone, Debug)]
 pub struct ColouredTile {
-    tile_index: u8,
+    index: u8,
     fg: u32,
     bg: u32,
 }
@@ -47,7 +49,7 @@ impl Demo {
         Demo {
             framebuffer: [0; FB_WIDTH * FB_HEIGHT],
             tilebuffer: [ColouredTile {
-                tile_index: 32,
+                index: 32,
                 fg: rgb(255,255,255),
                 bg: rgb(0,0,0),
             }; FB_WIDTH / TILE_WIDTH * FB_HEIGHT / TILE_HEIGHT],
@@ -80,7 +82,7 @@ impl Demo {
                     &mut self.framebuffer,
                     x,
                     y,
-                    self.tiles[tile.tile_index as usize],
+                    self.tiles[tile.index as usize],
                     tile.fg,
                     tile.bg,
                 );
